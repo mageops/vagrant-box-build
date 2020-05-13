@@ -1,0 +1,29 @@
+os: linux
+dist: bionic
+language: python
+
+env:
+  global:
+    - BUILD_CACHE_DIR="/home/travis/.build-cache"
+  matrix:
+    - VAGRANT_VERSION="2.2.9" VBOX_VERSION="6.1.1" 
+
+cache:
+  directories:
+    - /home/travis/.vagrant.d/boxes/
+    - /home/travis/.build-cache/
+
+before_install:
+  - >-
+    sudo apt -y update 
+    && sudo apt -y install 
+      build-essential 
+      "linux-headers-$(uname -r)" 
+      curl 
+      bash
+
+install:
+  - ./.vagrant-ubuntu-install.sh
+
+script:
+  - ./build.sh
