@@ -23,7 +23,7 @@ cache:
     - /home/travis/.vagrant.d/boxes/
     - /home/travis/.build-cache/
 
-install:
+before_install:
   - ./.travis.install.sh
 
 script:
