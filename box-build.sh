@@ -52,15 +52,16 @@ log_stage "Vagrant Cloud auth: $(vagrant cloud auth whoami)"
 
 log_stage "Publishing Box release to Vagrant cloud: ${VAGRANT_CLOUD_BOX}#${VAGRANT_CLOUD_BOX_VERSION}"
 
-vagrant cloud publish \
-  --force \
-  --release \
-  --description "${VAGRANT_CLOUD_BOX_DESCRIPTION:-'N/A'}" \
-  --version-description "${VAGRANT_CLOUD_BOX_VERSION_DESCRIPTION:-Automated Build}" \
-  "${VAGRANT_CLOUD_BOX}" \
-  "${VAGRANT_CLOUD_BOX_VERSION}" \
-  "${VAGRANT_PROVIDER}" \
-    package.box
+log_step "Publish and release the package" \
+  vagrant cloud publish \
+    --force \
+    --release \
+    --description "${VAGRANT_CLOUD_BOX_DESCRIPTION:-'N/A'}" \
+    --version-description "${VAGRANT_CLOUD_BOX_VERSION_DESCRIPTION:-Automated Build}" \
+    "${VAGRANT_CLOUD_BOX}" \
+    "${VAGRANT_CLOUD_BOX_VERSION}" \
+    "${VAGRANT_PROVIDER}" \
+      package.box
     
 log_step "Leave vagrant directory" \
   popd >/dev/null

@@ -28,4 +28,3 @@ install:
 
 script:
   - ./box-build.sh
-  - ./box-package.sh

@@ -1,10 +1,21 @@
 #!/usr/bin/env bash
 
+###
+# TODO: Compile the freaking VirtualBox Guest Additions,
+# or add a service to do this at every start. I could not
+# get VBoxManage to attach additions cd from CLI, even though
+# the option is there and documented. /FS
+###
+
 export VM_ROOTDISK_SIZE="${VM_ROOTDISK_SIZE:-100000}"
 export VM_ROOTDISK_FILENAME_RESIZED_VDI="rootdisk.vdi"
 export VM_ROOTDISK_FILENAME_RESIZED_VMDK="rootdisk.vmdk"
 export VM_SWAPDISK_SIZE="${VM_SWAPDISK_SIZE:-$(( VM_MEMORY / 4 * 3 ))}"
 export VM_SWAPDISK_FILENAME="swapdisk.vmdk"
+
+export VAGRANT_BOX_DESCRIPTION_LINKS="https://github.com/mageops | https://magesuite.io | https://creativestyle.pl | https://creativestyle.de"
+export VAGRANT_CLOUD_BOX_DESCRIPTION="Supercharged version of the official centos/7 Box ($VAGRANT_BOX_DESCRIPTION_LINKS)"
+
 
 vagrant_provider_setup() {
   ###
