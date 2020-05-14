@@ -12,6 +12,7 @@ export VM_ROOTDISK_FILENAME_RESIZED_VDI="rootdisk.vdi"
 export VM_ROOTDISK_FILENAME_RESIZED_VMDK="rootdisk.vmdk"
 export VM_SWAPDISK_SIZE="${VM_SWAPDISK_SIZE:-$(( VM_MEMORY / 4 * 3 ))}"
 export VM_SWAPDISK_FILENAME="swapdisk.vmdk"
+export VM_ROOTDISK_UUID="$(uuidgen)"
 
 export VAGRANT_BOX_DESCRIPTION_LINKS="https://github.com/mageops | https://magesuite.io | https://creativestyle.pl | https://creativestyle.de"
 export VAGRANT_CLOUD_BOX_DESCRIPTION="Supercharged version of the official centos/7 Box ($VAGRANT_BOX_DESCRIPTION_LINKS)"
@@ -208,6 +209,36 @@ vagrant_provider_setup() {
       --spec-ctrl on \
       --hwvirtex on \
       --nested-hw-virt on
+
+  log_step "Detach rootdisk (workaround Virtualbox bugs)" \
+    VBoxManage storageattach "$VM_NAME" \
+        --storagectl SCSI \
+        --device 0 \
+        --port 0 \
+        --medium emptydrive
+
+  log_step "Close the rootdisk without deleting (workaround Virtualbox bugs)" \
+      VBoxManage closemedium disk \
+        "$VM_ROOTDISK_FILENAME_RESIZED_VDI"
+
+  log_step "Change rootdisk UUID (workaround Virtualbox bugs)" \
+    vbox-img setuuid \
+      --filename "$VM_ROOTDISK_FILENAME_RESIZED_VMDK" \
+      --zeroparentuuid \
+      --format VMDK \
+      --uuid "$VM_ROOTDISK_UUID"
+
+  log_step "Attach the VMDK again" \
+    VBoxManage storageattach "$VM_NAME" \
+        --storagectl SCSI \
+        --device 0 \
+        --port 0 \
+        --type hdd \
+        --mtype normal \
+        --nonrotational on \
+        --discard on \
+        --medium "$VM_ROOTDISK_FILENAME_RESIZED_VMDK" \
+        --comment "Linux rootfs disk"
 
   log_step "Start the VM back up" \
     vagrant up
