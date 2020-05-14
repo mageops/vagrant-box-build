@@ -55,7 +55,7 @@ KERNEL_CMDLINE="$KERNEL_CMDLINE $(curl -Ls https://make-linux-fast-again.com)"
 
 # Kernel modules needed for boot
 VIRTUALBOX_MODULES_LOAD="
-  # Virtualbox LSILogic SCSI controller 
+  # Virtualbox LSILogic SCSI controller
   mptspi
   mptscsih
   mptbase
@@ -69,11 +69,11 @@ FSTAB="
 ###
 # --- Configured by vagrant provisioner ---
 ##
-# Note: We always want to boot off the first harddrive and the UUID 
+# Note: We always want to boot off the first harddrive and the UUID
 # can change so instead lets use the device directly.
 ###
-# Note: Unfortunately the old version of systemd (<236) in CentOS 7 has neither 
-# x-systemd.makefs nor x-systemd.growfs so we'll have to manually make the swapfs 
+# Note: Unfortunately the old version of systemd (<236) in CentOS 7 has neither
+# x-systemd.makefs nor x-systemd.growfs so we'll have to manually make the swapfs
 # an grow the root partition later.. This options are added anyway for the future.
 ###
 /dev/sda1 / xfs defaults,x-systemd.growfs 0 0
@@ -81,11 +81,29 @@ FSTAB="
 /dev/sr0 /mnt/dvd iso9660 defaults,noauto 0 1
 "
 
+FASTESTMIRROR="
+[main]
+enabled=1
+verbose=0
+always_print_best_host = true
+socket_timeout=3
+hostfilepath=timedhosts.txt
+maxhostfileage=1
+maxthreads=15
+"
+
 log_step "Install extra repositories" \
   yum -y install \
     epel-release \
     elrepo-release \
-    dnf
+    yum-plugin-fastestmirror
+
+log_step "Install fastestmirror config" \
+  echo "$FASTESTMIRROR" \
+    >/etc/yum/pluginconf.d/fastestmirror.conf
+
+log_step "Remove fastestmirror cache" \
+   find /var/cache/yum/ -iname 'timedhosts*' -exec rm -vf {} \;
 
 log_step "Enable Extra repositories" \
   yum-config-manager --enable \
@@ -94,14 +112,11 @@ log_step "Enable Extra repositories" \
     centos-ansible-29 \
       >/dev/null
 
-###
-# Note: We're using DNF as it's much faster
-###
 log_step "Update system" \
-  dnf -y update
+  yum -y update
 
 log_step "Install packages" \
-  dnf -y install $PACKAGES
+  yum -y install $PACKAGES
 
 log_step "Set Grub boot entry to use new kernel" \
   grub2-set-default 0 \
@@ -126,7 +141,7 @@ log_step "Clean YUM caches" \
   yum clean all
 
 log_step "Clean DNF caches" \
-  dnf clean all
+  yum clean all
 
 log_step "Disable swapfile" \
   swapoff -a
@@ -135,10 +150,13 @@ log_step "Remove swapfile" \
   rm -f /swapfile
 
 log_step "Backup fstab" \
-  cp -vf /etc/fstab /etc/fstab.bkp  
+  cp -vf /etc/fstab /etc/fstab.bkp
 
 log_step "Configure new fstab" \
   echo "$FSTAB" > /etc/fstab
+
+log_step "Remove fastestmirror cache so it's rebuilt for next user" \
+  find /var/cache/yum/ -iname 'timedhosts*' -exec rm -vf {} \;
 
 
 
