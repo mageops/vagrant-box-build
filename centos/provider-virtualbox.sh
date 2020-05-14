@@ -167,10 +167,10 @@ vagrant_provider_setup() {
         --comment "Virtualbox Guest Additions DVD disk"
   fi
 
-  log_step "Rename storage controller back to SCSI otherwise vagrant just breaks down" \
-    VBoxManage storagectl "$VM_NAME" \
-      --name SCSI \
-      --rename IDE
+  # log_step "Rename storage controller back to SCSI otherwise vagrant just breaks down" \
+  #   VBoxManage storagectl "$VM_NAME" \
+  #     --name SCSI \
+  #     --rename IDE
 
   log_stage "Adjust VM configuration for stability and performance"
 

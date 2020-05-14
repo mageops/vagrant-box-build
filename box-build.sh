@@ -19,13 +19,13 @@ log_stage "Begin machine ${VM_NAME}@${VAGRANT_PROVIDER} provisioning"
 log_step "Enter vagrant directory" \
   pushd "$VAGRANT_DIR" >/dev/null
 
-log_step "Bring up the machine" \
-  vagrant up \
-    --no-provision \
-    --provider="${VAGRANT_PROVIDER}"
+# log_step "Bring up the machine" \
+#   vagrant up \
+#     --no-provision \
+#     --provider="${VAGRANT_PROVIDER}"
 
-log_step "Provision the machine" \
-  vagrant provision
+# log_step "Provision the machine" \
+#   vagrant provision
 
 if [ -x "$VAGRANT_PROVIDER_SCRIPT" ] ; then
   log_stage "Executing provider setup script: $VAGRANT_PROVIDER_SCRIPT"
