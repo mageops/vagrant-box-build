@@ -1,8 +1,13 @@
+###
+# Warning! This is a Vagrantfile for building the base box, not for
+# distribution. The `Vagrantfile.dist` file will be included with
+# the base box.
+###
+
 Vagrant.configure("2") do |config|
-    config.vm.box = "centos/7"
+    config.vm.box = "mageops/centos"
     config.vm.boot_timeout = 300
-    config.vm.provision "shell", path: "vagrant-provision.sh", run: "once"
-    config.vm.provision "shell", path: "vagrant-provision-disks.sh", run: "always"
+    config.vm.provision "shell", path: "provision.sh", run: "once"
     config.vm.synced_folder ".", "/vagrant", disabled: true
     config.vm.box_check_update = true
 
@@ -13,4 +18,3 @@ Vagrant.configure("2") do |config|
         vb.cpus = "#{ENV['VM_CPUS']}"
     end
 end
-

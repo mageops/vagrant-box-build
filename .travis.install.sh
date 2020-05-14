@@ -15,8 +15,17 @@ VBOX_PACKAGE_PATH="$BUILD_CACHE_DIR/$(basename "$VBOX_PACKAGE_URL")"
 
 mkdir -p "$BUILD_CACHE_DIR"
 
-echo "---"
 echo "* Begin Ubuntu setup for Vagrant/Virtualbox..."
+
+echo "* Update system"
+sudo apt -y update 
+
+echo "* Install basic packages"
+sudo apt -y install \
+  build-essential \
+  "linux-headers-$(uname -r)" \
+  curl \
+  bash
 
 echo "* Download: $VAGRANT_PACKAGE_URL -> $VAGRANT_PACKAGE_PATH"
 [ -f "$VAGRANT_PACKAGE_PATH" ]  || curl -sL -o "$VAGRANT_PACKAGE_PATH"  "$VAGRANT_PACKAGE_URL"
@@ -32,7 +41,6 @@ echo sudo apt-get -y install \
 echo "* Build Virtualbox kernel modules"
 echo sudo systemctl start vboxdrv
 
-echo "---"
 echo "✅ Vagrant and Virtualbox installed successfully"
 echo "📦 VirtualBox version: $(VBoxManage --version)"
 echo "📦 Vagrant version: $(vagrant --version)"

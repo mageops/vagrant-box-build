@@ -30,7 +30,6 @@ PACKAGES="\
   wget \
   yum-plugin-verify \
   yum-utils \
-  ansible \
   kernel-ml \
   cloud-utils-growpart \
   xfsprogs
@@ -82,12 +81,10 @@ FSTAB="
 /dev/sr0 /mnt/dvd iso9660 defaults,noauto 0 1
 "
 
-
 log_step "Install extra repositories" \
   yum -y install \
     epel-release \
     elrepo-release \
-    centos-release-ansible-29 \
     dnf
 
 log_step "Enable Extra repositories" \

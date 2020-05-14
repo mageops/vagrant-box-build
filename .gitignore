@@ -1,6 +1,6 @@
-/.vagrant/
-/*.vmdk
-/*.log
-/*.ovf
-/*.vdi
-/*.box
+.vagrant/
+*.vmdk
+*.log
+*.ovf
+*.vdi
+*.box

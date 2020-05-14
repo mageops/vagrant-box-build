@@ -1,29 +1,31 @@
 os: linux
 dist: bionic
 language: python
+services:
+  - docker
 
 env:
   global:
+    - VAGRANT_CLOUD_ORG="mageops"
     - BUILD_CACHE_DIR="/home/travis/.build-cache"
+    - VAGRANT_BOX_DESCRIPTION_LINKS="https://github.com/mageops | https://magesuite.io | https://creativestyle.pl | https://creativestyle.de"
+    - VAGRANT_VERSION="2.2.9"
+    - VBOX_VERSION="6.1.1"
+    - VM_CPUS="2"
+    - VM_MEMORY="3072"
+    - VM_ROOTDISK_SIZE="100000"
+    - VM_SWAPDISK_SIZE="2048"
   matrix:
-    - VAGRANT_VERSION="2.2.9" VBOX_VERSION="6.1.1" 
+    - VAGRANT_BOX="centos" VAGRANT_BOX="virtualbox" VAGRANT_CLOUD_BOX_DESCRIPTION="Supercharged version of the official centos/7 Box ($VAGRANT_BOX_DESCRIPTION_LINKS)"
 
 cache:
   directories:
     - /home/travis/.vagrant.d/boxes/
     - /home/travis/.build-cache/
 
-before_install:
-  - >-
-    sudo apt -y update 
-    && sudo apt -y install 
-      build-essential 
-      "linux-headers-$(uname -r)" 
-      curl 
-      bash
-
 install:
-  - ./.vagrant-ubuntu-install.sh
+  - ./.travis.install.sh
 
 script:
-  - ./build.sh
+  - ./box-build.sh
+  - ./box-package.sh

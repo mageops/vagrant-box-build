@@ -1,0 +1,22 @@
+###
+# Warning! This is a Vagrantfile for building the base box, not for
+# distribution. The `Vagrantfile.dist` file will be included with
+# the base box.
+###
+
+Vagrant.configure("2") do |config|
+    config.vm.box = "centos/7"
+    config.vm.boot_timeout = 300
+    config.vm.provision "shell", path: "provision.sh", run: "once"
+    config.vm.provision "shell", path: "provision-disks.sh", run: "always"
+    config.vm.synced_folder ".", "/vagrant", disabled: true
+    config.vm.box_check_update = true
+
+    config.vm.provider :virtualbox do |vb|
+        vb.gui = false
+        vb.name = "#{ENV['VM_NAME']}"
+        vb.memory = "#{ENV['VM_MEMORY']}"
+        vb.cpus = "#{ENV['VM_CPUS']}"
+    end
+end
+
