@@ -28,10 +28,10 @@ sudo apt -y install \
   bash
 
 echo "* Download: $VAGRANT_PACKAGE_URL -> $VAGRANT_PACKAGE_PATH"
-[ -f "$VAGRANT_PACKAGE_PATH" ]  || curl -sL -o "$VAGRANT_PACKAGE_PATH"  "$VAGRANT_PACKAGE_URL"
+curl -L -o "$VAGRANT_PACKAGE_PATH"  "$VAGRANT_PACKAGE_URL"
 
 echo "* Download: $VBOX_PACKAGE_URL -> $VBOX_PACKAGE_PATH"
-[ -f "$VBOX_PACKAGE_PATH" ]     || curl -sL -o "$VBOX_PACKAGE_PATH"     "$VBOX_PACKAGE_URL"
+curl -L -o "$VBOX_PACKAGE_PATH"     "$VBOX_PACKAGE_URL"
 
 echo "* Install: $VAGRANT_PACKAGE_PATH $VBOX_PACKAGE_PATH"
 sudo apt-get -y install \
