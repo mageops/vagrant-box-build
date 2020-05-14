@@ -60,13 +60,6 @@ vagrant_provider_setup() {
         VBoxManage closemedium disk \
           "$VM_ROOTDISK_UUID_OLD"
 
-    log_step "Change rootdisk UUID (workaround Virtualbox bugs)" \
-      vbox-img setuuid \
-        --filename "$VM_ROOTDISK_FILENAME_ORIGINAL_VMDK" \
-        --zeroparentuuid \
-        --format VMDK \
-        --uuid "$VM_ROOTDISK_UUID"
-
     ###
     # Note: I've tried hard and it's not possible to change the controller
     # type from IDE to SCSI using CLI (although with GUI it's one click),
@@ -107,46 +100,30 @@ vagrant_provider_setup() {
     # -> convert back to VMDK
     # -> attach to the new SCSI controller.
     ###
-    if [ ! -f "$VM_ROOTDISK_FILENAME_RESIZED_VDI" ] ; then
-      log_step "Convert current root disk to VDI for resize" \
-        VBoxManage clonemedium disk \
-          "$VM_ROOTDISK_FILENAME_ORIGINAL_VMDK" \
-          "$VM_ROOTDISK_FILENAME_RESIZED_VDI" \
-          --format VDI
+    log_step "Convert current root disk to VDI for resize" \
+      VBoxManage clonemedium disk \
+        "$VM_ROOTDISK_FILENAME_ORIGINAL_VMDK" \
+        "$VM_ROOTDISK_FILENAME_RESIZED_VDI" \
+        --format VDI
 
-      log_step "Resize VDI to ${VM_ROOTDISK_SIZE}MB" \
-        VBoxManage modifymedium disk "$VM_ROOTDISK_FILENAME_RESIZED_VDI" \
-          --resize "$VM_ROOTDISK_SIZE" \
-          --compact \
-          --description "Vagrant CentOS 7 RootFS Disk"
-    fi
+    log_step "Resize VDI to ${VM_ROOTDISK_SIZE}MB" \
+      VBoxManage modifymedium disk "$VM_ROOTDISK_FILENAME_RESIZED_VDI" \
+        --resize "$VM_ROOTDISK_SIZE" \
+        --compact \
+        --description "Vagrant CentOS 7 RootFS Disk"
 
-    if [ ! -f "$VM_ROOTDISK_FILENAME_RESIZED_VMDK" ] ; then
-      log_step "Convert the VDI root disk image back to VMDK" \
-        VBoxManage clonemedium disk \
-          "$VM_ROOTDISK_FILENAME_RESIZED_VDI" \
-          "$VM_ROOTDISK_FILENAME_RESIZED_VMDK" \
-          --format VMDK \
-          --variant Stream
-
-      log_step "Delete the resized VDI root disk image" \
-        VBoxManage closemedium disk \
-          "$VM_ROOTDISK_FILENAME_RESIZED_VDI" \
-          --delete
-    fi
+    log_step "Attach resized VDI to the new SCSI controller" \
+      VBoxManage storageattach "$VM_NAME" \
+          --storagectl SCSI \
+          --device 0 \
+          --port 0 \
+          --type hdd \
+          --mtype normal \
+          --nonrotational on \
+          --discard on \
+          --medium "$VM_ROOTDISK_FILENAME_RESIZED_VDI" \
+          --comment "Linux rootfs disk"
   fi
-
-  log_step "Attach resized VMDK root disk to the new SCSI controller" \
-    VBoxManage storageattach "$VM_NAME" \
-        --storagectl SCSI \
-        --device 0 \
-        --port 0 \
-        --type hdd \
-        --mtype normal \
-        --nonrotational on \
-        --discard on \
-        --medium "$VM_ROOTDISK_FILENAME_RESIZED_VMDK" \
-        --comment "Linux rootfs disk"
 
   if [ "${VM_ATTR_SCSI_0_1:-none}" == "none" ] ; then
     log_stage "Add swap disk using fixed-size image"
@@ -187,11 +164,6 @@ vagrant_provider_setup() {
         --comment "Virtualbox Guest Additions DVD disk"
   fi
 
-  # log_step "Rename storage controller back to SCSI otherwise vagrant just breaks down" \
-  #   VBoxManage storagectl "$VM_NAME" \
-  #     --name SCSI \
-  #     --rename IDE
-
   log_stage "Adjust VM configuration for stability and performance"
 
   log_step "Disable VM audio to avoid problems on macOS" \
@@ -229,8 +201,8 @@ vagrant_provider_setup() {
       --hwvirtex on \
       --nested-hw-virt on
 
-  # log_step "Start the VM back up" \
-  #   vagrant up
+  log_step "Start the VM back up" \
+    vagrant up
 
-  # virtualbox_vm_system_info_print
+  virtualbox_vm_system_info_print
 }
