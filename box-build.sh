@@ -24,8 +24,8 @@ log_step "Bring up the machine" \
     --no-provision \
     --provider="${VAGRANT_PROVIDER}"
 
-# log_step "Provision the machine" \
-#   vagrant provision
+log_step "Provision the machine" \
+  vagrant provision
 
 if [ -x "$VAGRANT_PROVIDER_SCRIPT" ] ; then
   log_stage "Executing provider setup script: $VAGRANT_PROVIDER_SCRIPT"
