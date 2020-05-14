@@ -24,8 +24,8 @@ log_step "Bring up the machine" \
     --no-provision \
     --provider="${VAGRANT_PROVIDER}"
 
-log_step "Provision the machine" \
-  vagrant provision
+# log_step "Provision the machine" \
+#   vagrant provision
 
 if [ -x "$VAGRANT_PROVIDER_SCRIPT" ] ; then
   log_stage "Executing provider setup script: $VAGRANT_PROVIDER_SCRIPT"
@@ -62,7 +62,7 @@ log_step "Publish and release the package" \
     "${VAGRANT_CLOUD_BOX_VERSION}" \
     "${VAGRANT_PROVIDER}" \
       package.box
-    
+
 log_step "Leave vagrant directory" \
   popd >/dev/null
 

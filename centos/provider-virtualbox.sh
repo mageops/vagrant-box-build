@@ -8,6 +8,7 @@
 ###
 
 export VM_ROOTDISK_SIZE="${VM_ROOTDISK_SIZE:-100000}"
+export VM_ROOTDISK_FILENAME_ORIGINAL_VMDK="rootdisk_original.vmdk"
 export VM_ROOTDISK_FILENAME_RESIZED_VDI="rootdisk.vdi"
 export VM_ROOTDISK_FILENAME_RESIZED_VMDK="rootdisk.vmdk"
 export VM_SWAPDISK_SIZE="${VM_SWAPDISK_SIZE:-$(( VM_MEMORY / 4 * 3 ))}"
@@ -21,7 +22,7 @@ export VAGRANT_CLOUD_BOX_DESCRIPTION="Supercharged version of the official cento
 vagrant_provider_setup() {
   ###
   # WARNING: Provisioning has to be done before VM configuration as modules
-  # for Virtualbox devices need to be loaded on boot (initramfs needs to 
+  # for Virtualbox devices need to be loaded on boot (initramfs needs to
   # be rebuilt) - otherwise system won't boot!
   ###
   log_stage "Configure the Virtualbox VM"
@@ -33,7 +34,7 @@ vagrant_provider_setup() {
     vagrant halt
 
   ####
-  # > Dragons ahead! If you need to modify the following code, then 
+  # > Dragons ahead! If you need to modify the following code, then
   # > you're in for a treat! VBoxManage is the most unintuitive,
   # > cryptic and buggy CLI tool I've ever used. Next time I would
   # > rather modify the .vbox or .ovf file directly...
@@ -42,6 +43,29 @@ vagrant_provider_setup() {
   if [ ! -z "${VM_ATTR_IDE_IMAGEUUID_0_0:-}" ] ; then
     log_stage "Upgrade IDE storage controller to SCSI"
     VM_ROOTDISK_UUID_OLD="$VM_ATTR_IDE_IMAGEUUID_0_0"
+
+    log_step "Detach rootdisk" \
+      VBoxManage storageattach "$VM_NAME" \
+          --storagectl IDE \
+          --device 0 \
+          --port 0 \
+          --medium emptydrive
+
+    log_step "Move rootdisk to current dir" \
+        VBoxManage modifymedium disk \
+          "$VM_ROOTDISK_UUID_OLD" \
+          --move "$VM_ROOTDISK_FILENAME_ORIGINAL_VMDK"
+
+    log_step "Close root disk" \
+        VBoxManage closemedium disk \
+          "$VM_ROOTDISK_UUID_OLD"
+
+    log_step "Change rootdisk UUID (workaround Virtualbox bugs)" \
+      vbox-img setuuid \
+        --filename "$VM_ROOTDISK_FILENAME_ORIGINAL_VMDK" \
+        --zeroparentuuid \
+        --format VMDK \
+        --uuid "$VM_ROOTDISK_UUID"
 
     ###
     # Note: I've tried hard and it's not possible to change the controller
@@ -57,7 +81,7 @@ vagrant_provider_setup() {
         --remove
 
     ###
-    # Note: The best option would be the `virtio-scsi` controller but 
+    # Note: The best option would be the `virtio-scsi` controller but
     # Virtualbox support is experimental and thus the performance abysmal.
     ###
     # Warning: This has to be done *after* the initial provisioning
@@ -77,23 +101,18 @@ vagrant_provider_setup() {
 
     ###
     # Virtualbox cannot resize VMDK disks but we want the box to be also
-    # compatible with VMWare so we: 
-    # -> convert to VDI 
-    # -> resize VDI 
+    # compatible with VMWare so we:
+    # -> convert to VDI
+    # -> resize VDI
     # -> convert back to VMDK
-    # -> attach to the new SCSI controller. 
+    # -> attach to the new SCSI controller.
     ###
     if [ ! -f "$VM_ROOTDISK_FILENAME_RESIZED_VDI" ] ; then
       log_step "Convert current root disk to VDI for resize" \
         VBoxManage clonemedium disk \
-          "$VM_ROOTDISK_UUID_OLD" \
+          "$VM_ROOTDISK_FILENAME_ORIGINAL_VMDK" \
           "$VM_ROOTDISK_FILENAME_RESIZED_VDI" \
           --format VDI
-
-      log_step "Delete old root disk image" \
-          VBoxManage closemedium disk \
-            "$VM_ROOTDISK_UUID_OLD" \
-            --delete
 
       log_step "Resize VDI to ${VM_ROOTDISK_SIZE}MB" \
         VBoxManage modifymedium disk "$VM_ROOTDISK_FILENAME_RESIZED_VDI" \
@@ -132,7 +151,7 @@ vagrant_provider_setup() {
   if [ "${VM_ATTR_SCSI_0_1:-none}" == "none" ] ; then
     log_stage "Add swap disk using fixed-size image"
 
-    if [ ! -f "$VM_SWAPDISK_FILENAME" ] ; then 
+    if [ ! -f "$VM_SWAPDISK_FILENAME" ] ; then
       log_step "Create swap disk fixed-size image" \
         VBoxManage createmedium \
             disk \
@@ -210,38 +229,8 @@ vagrant_provider_setup() {
       --hwvirtex on \
       --nested-hw-virt on
 
-  log_step "Detach rootdisk (workaround Virtualbox bugs)" \
-    VBoxManage storageattach "$VM_NAME" \
-        --storagectl SCSI \
-        --device 0 \
-        --port 0 \
-        --medium emptydrive
+  # log_step "Start the VM back up" \
+  #   vagrant up
 
-  log_step "Close the rootdisk without deleting (workaround Virtualbox bugs)" \
-      VBoxManage closemedium disk \
-        "$VM_ROOTDISK_FILENAME_RESIZED_VDI"
-
-  log_step "Change rootdisk UUID (workaround Virtualbox bugs)" \
-    vbox-img setuuid \
-      --filename "$VM_ROOTDISK_FILENAME_RESIZED_VMDK" \
-      --zeroparentuuid \
-      --format VMDK \
-      --uuid "$VM_ROOTDISK_UUID"
-
-  log_step "Attach the VMDK again" \
-    VBoxManage storageattach "$VM_NAME" \
-        --storagectl SCSI \
-        --device 0 \
-        --port 0 \
-        --type hdd \
-        --mtype normal \
-        --nonrotational on \
-        --discard on \
-        --medium "$VM_ROOTDISK_FILENAME_RESIZED_VMDK" \
-        --comment "Linux rootfs disk"
-
-  log_step "Start the VM back up" \
-    vagrant up
-
-  virtualbox_vm_system_info_print
+  # virtualbox_vm_system_info_print
 }
