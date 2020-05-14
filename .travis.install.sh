@@ -34,12 +34,12 @@ echo "* Download: $VBOX_PACKAGE_URL -> $VBOX_PACKAGE_PATH"
 [ -f "$VBOX_PACKAGE_PATH" ]     || curl -sL -o "$VBOX_PACKAGE_PATH"     "$VBOX_PACKAGE_URL"
 
 echo "* Install: $VAGRANT_PACKAGE_PATH $VBOX_PACKAGE_PATH"
-echo sudo apt-get -y install \
+sudo apt-get -y install \
   "$VAGRANT_PACKAGE_PATH" \
   "$VBOX_PACKAGE_PATH"
 
 echo "* Build Virtualbox kernel modules"
-echo sudo systemctl start vboxdrv
+sudo systemctl start vboxdrv
 
 echo "✅ Vagrant and Virtualbox installed successfully"
 echo "📦 VirtualBox version: $(VBoxManage --version)"
