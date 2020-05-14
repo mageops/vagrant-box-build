@@ -5,7 +5,7 @@ set -eu
 export BUILD_CACHE_DIR="${BUILD_CACHE_DIR:-$HOME/.build-cache}"
 export VAGRANT_VERSION="${VAGRANT_VERSION:-2.2.9}" 
 export VBOX_VERSION="${VBOX_VERSION:-6.1.1}"
-export VBOX_MAJOR_VERSION="$(echo $VBOX_VERSION | sed -E 's/^([0-9]+\.[0-9]+).*/\1/g')"
+export VBOX_MAJOR_VERSION="$(echo "$VBOX_VERSION" | cut -d'.' -f-2)"
 
 VAGRANT_PACKAGE_URL="https://releases.hashicorp.com/vagrant/${VAGRANT_VERSION}/vagrant_${VAGRANT_VERSION}_x86_64.deb"
 VBOX_PACKAGE_URL="https://download.virtualbox.org/virtualbox/${VBOX_MAJOR_VERSION}/virtualbox-${VBOX_MAJOR_VERSION}_${VBOX_VERSION}-137129~Ubuntu~bionic_amd64.deb"
