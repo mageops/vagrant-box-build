@@ -14,10 +14,11 @@ grow_root() {
 log_step "Grow the root disk partition" \
   grow_root
 
-if [ -b /dev/sdb ] && [ -z "$(swapon --show --raw /dev/sdb)" ] ; then 
+if [ -b /dev/sdb ] && [ -z "$(swapon --show --raw /dev/sdb)" ] ; then
   log_step "Make swap on swap disk" \
     mkswap -L "SWAP" /dev/sdb
 
   log_step "Activate swap disk" \
     swapon /dev/sdb
 fi
+

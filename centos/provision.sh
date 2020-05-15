@@ -18,9 +18,9 @@ PACKAGES="\
   nc \
   nmap \
   psmisc \
-  python \
-  python2-PyMySQL \
-  python2-pip \
+  python3 \
+  python3-virtualenv \
+  python3-pip \
   rsync \
   socat \
   strace \
@@ -31,6 +31,7 @@ PACKAGES="\
   yum-plugin-verify \
   yum-utils \
   kernel-ml \
+  kernel-ml-devel \
   cloud-utils-growpart \
   xfsprogs
 "
@@ -47,7 +48,9 @@ KERNEL_CMDLINE="\
   biosdevname=0 \
   crashkernel=auto \
   elevator=${KERNEL_IO_SCHEDULER} \
-  zswap_enabled=1 \
+  zswap.enabled=1 \
+  zswap.compressor=lz4 \
+  zswap.max_pool_percent=40 \
 "
 
 # Disable CPU bug mitigations
@@ -78,7 +81,8 @@ FSTAB="
 ###
 /dev/sda1 / xfs defaults,x-systemd.growfs 0 0
 /dev/sdb none swap defaults,x-systemd.makefs 0 1
-/dev/sr0 /mnt/dvd iso9660 defaults,noauto 0 1
+# Do not remove, see: /usr/local/bin/virtualbox-update-dvd-additions.sh
+/dev/sr0 /mnt/dvd iso9660 defaults,auto,user 0 1
 "
 
 FASTESTMIRROR="
@@ -91,6 +95,70 @@ hostfilepath=timedhosts.txt
 maxhostfileage=1
 maxthreads=15
 "
+
+VBOX_ADDITIONS_UPDATE_SCRIPT='
+#!/bin sh
+
+###
+# Service - Installs VirtualBox Guest Additions from DVD
+#
+# Licensed under MIT -
+# Copyright 2020 (c) creativestyle Polska Sp.z.o.o <https://creativestyle.pl>
+# Copyright 2020 (c) Filip Sobalski <filip.sobalski@creativestyle.pl>
+###
+# Note: Should be started from systemd unit after DVD is mounted.
+# See: /etc/systemd/system/virtualbox-update-dvd-additions.service
+###
+
+VBOX_GUEST_ADDITIONS_DVD_MOUNTPOINT="${VBOX_GUEST_ADDITIONS_DVD_MOUNTPOINT:-/mnt/dvd}"
+VBOX_GUEST_ADDITIONS_INSTALLER_FILENAME="${VBOX_GUEST_ADDITIONS_INSTALLER_FILENAME:-VBoxLinuxAdditions.run}"
+VBOX_GUEST_ADDITIONS_DVD_INSTALLER_PATH="$VBOX_GUEST_ADDITIONS_DVD_MOUNTPOINT/$VBOX_GUEST_ADDITIONS_INSTALLER_FILENAME"
+
+if [ -x "${VBOX_GUEST_ADDITIONS_DVD_INSTALLER_PATH}" ] ; then
+  echo "[SUCCESS] VBox Guest Additions DVD Installer found"
+
+  "$VBOX_GUEST_ADDITIONS_DVD_INSTALLER_PATH"      && echo "[SUCCESS] Run installer"
+  eject "$VBOX_GUEST_ADDITIONS_DVD_MOUNTPOINT"    && echo "[SUCCESS] Eject DVD"
+
+  echo "[NOTICE] Reboot the system to get the update modules!" >&2
+else
+  echo "[WARNING] VBox Guest Additions DVD Installer not found at: ${VBOX_GUEST_ADDITIONS_DVD_INSTALLER_PATH}" >&2
+fi
+'
+
+VBOX_ADDITIONS_UPDATE_SERVICE='
+[Unit]
+Description=Install VirtualBox Guest Additions from DVD
+ConditionPathExists=/mnt/dvd/VBoxLinuxAdditions.run
+After=mnt-dvd.mount
+
+[Service]
+Type=oneshow
+ExecStart=/usr/local/bin/virtualbox-update-dvd-additions.sh
+RemainAfterExit=yes
+Environment=VBOX_GUEST_ADDITIONS_DVD_MOUNTPOINT=/mnt/dvd
+Environment=VBOX_GUEST_ADDITIONS_INSTALLER_FILENAME=VBoxLinuxAdditions.run
+
+[Install]
+WantedBy=multi-user.target
+'
+
+install_vbox_additions_dvd_updater() {
+  log_step "Install the additions updater service unit file" \
+    echo "$VBOX_ADDITIONS_UPDATE_SERVICE" > /etc/systemd/system/virtualbox-update-dvd-additions.service
+
+  log_step "Install the additions updater service script" \
+    echo "$VBOX_ADDITIONS_UPDATE_SCRIPT" > /usr/local/bin/virtualbox-update-dvd-additions.sh
+
+  log_step "Make the additions updater service script executable" \
+    chmod +x /usr/local/bin/virtualbox-update-dvd-additions.sh
+
+  log_step "Reload systemd daemon" \
+    systemctl daemon-reload
+
+  log_step "Start and enable the additions updater service" \
+    systemctl enable --now virtualbox-update-dvd-additions
+}
 
 log_step "Install extra repositories" \
   yum -y install \
@@ -158,7 +226,17 @@ log_step "Configure new fstab" \
 log_step "Remove fastestmirror cache so it's rebuilt for next user" \
   find /var/cache/yum/ -iname 'timedhosts*' -exec rm -vf {} \;
 
+log_step "Disable selinux now" \
+  setenforce 0
 
+log_step "Disable selinux permanently" \
+  sed -Ei 's/^ *SELINUX=.*$/SELINUX=disabled/g' /etc/sysconfig/selinux
+
+log_step "Disable selinux service" \
+  systemctl disable selinux-policy-migrate-local-changes@targeted.service
+
+log_step "Install VirtualBox Guest Additions Updater" \
+  install_vbox_additions_dvd_updater
 
 
 

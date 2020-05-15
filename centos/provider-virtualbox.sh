@@ -125,7 +125,7 @@ vagrant_provider_setup() {
           --comment "Linux rootfs disk"
   fi
 
-  if [ "${VM_ATTR_SCSI_0_1:-none}" == "none" ] ; then
+  if [ "${VM_ATTR_SCSI_1_0:-none}" == "none" ] ; then
     log_stage "Add swap disk using fixed-size image"
 
     if [ ! -f "$VM_SWAPDISK_FILENAME" ] ; then
@@ -151,17 +151,14 @@ vagrant_provider_setup() {
           --comment "Fixed size Linux swap disk"
   fi
 
-  if [ "${VM_ATTR_SCSI_0_2:-none}" == "none" ] ; then
-    log_stage "Add a DVD drive for guest additions installation"
-
-    log_step "Attach an empty DVD drive" \
-      VBoxManage storageattach "$VM_NAME" \
-        --storagectl SCSI \
-        --device 0 \
-        --port 2 \
-        --type dvddrive \
-        --medium emptydrive \
-        --comment "Virtualbox Guest Additions DVD disk"
+  if [ "${VM_ATTR_SATA_0_0:-none}" == "none" ] ; then
+    log_step "Create SATA storage controller" \
+      VBoxManage storagectl "$VM_NAME" \
+        --name SATA \
+        --add sata \
+        --hostiocache on \
+        --bootable off \
+        --portcount 3
   fi
 
   log_stage "Adjust VM configuration for stability and performance"
@@ -200,6 +197,27 @@ vagrant_provider_setup() {
       --spec-ctrl on \
       --hwvirtex on \
       --nested-hw-virt on
+
+
+  ###
+  # Note: The first two ports (0, 1) are left untouched for future uses.
+  ###
+  log_step "Attach an empty DVD drive to SATA controller" \
+    VBoxManage storageattach "$VM_NAME" \
+      --storagectl SATA \
+      --device 0 \
+      --port 2 \
+      --type dvddrive \
+      --medium emptydrive
+
+  log_step "Insert the guest additions DVD disk" \
+    VBoxManage storageattach "$VM_NAME" \
+      --storagectl SATA \
+      --device 0 \
+      --port 2 \
+      --medium additions \
+      --forceunmount \
+      --comment "Virtualbox Guest Additions DVD disk"
 
   log_step "Start the VM back up" \
     vagrant up
