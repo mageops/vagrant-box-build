@@ -43,6 +43,7 @@ pushd /opt/mageops
                 -i inventory/vagrant-nested.ini \
                 -e "mageops_project_assets_dir=$PROJECT_ASSETS_DIR" \
                 -e "mageops_ansible_provisioning_mode=local_nested" \
+                -e "mageops_unison_server_port=5566" \
                     ./vagrant.yml
 
         popd
