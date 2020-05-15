@@ -44,6 +44,10 @@ _**Performance-boosted CentOS 7 system extending the [official box](https://app.
  - VirtualBox VM performance-enhacing features enabled (e.g. speculation control)
  - Memory usage optimization via `zswap` (default conservative settings)
  - Audio support disabled as it causes many problems on macOS
+ - Up-to-date VirtualBox Guest Additions with runtime auto-update
+   * Guest Additions DVD is inserted automatically on vagrant up (via default Vagrantfile)
+   * Guest system service installs the additions if the DVD is detected at boot
+
 
 _These choices are based on comparison benchmarking<sup>4</sup>, expertise and experience._
 
@@ -59,9 +63,6 @@ _These choices are based on comparison benchmarking<sup>4</sup>, expertise and e
 > use at [creativestyle](https://creativestyle.pl) for developer workstations.
 
 #### 🗓 Still a few things left todo
- - Install Guest Additions for latest VirtualBox version on build
-   * _[Optionally]_ Attach Guest Additions DVD on boot using dist Vagrantfile
-   * _[Optionally]_ Install a systemd service that updates Guest Addtions on boot
  - Improve NFS share performance
    * **Note: It might even work better than unison if set up properly on host and guest**
      - Recently many articles appeared that are reporting superb NFS file
