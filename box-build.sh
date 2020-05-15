@@ -19,6 +19,14 @@ log_stage "Begin machine ${VM_NAME}@${VAGRANT_PROVIDER} provisioning"
 log_step "Enter vagrant directory" \
   pushd "$VAGRANT_DIR" >/dev/null
 
+log_step "Upgrade the base box" \
+  vagrant box update
+
+if ! vagrant status --machine-readable 2>&1 | grep 'default,state,not_created' ; then
+  log_step "Destroy the existing machine" \
+    vagrant destroy
+fi
+
 log_step "Bring up the machine" \
   vagrant up \
     --no-provision \
@@ -44,9 +52,13 @@ log_stage "Begin packaging of machine ${VM_NAME}@${VAGRANT_PROVIDER} "
 log_step "Stop the machine" \
   vagrant halt
 
+rm -vf centos.box
+
 log_step "Create the box file" \
   vagrant package \
-    default
+    --output "${VAGRANT_BOX}.box" \
+    --vagrantfile Vagratfile.dist \
+      "default"
 
 log_stage "Vagrant Cloud auth: $(vagrant cloud auth whoami)"
 
@@ -58,10 +70,10 @@ log_step "Publish and release the package" \
     --release \
     --description "${VAGRANT_CLOUD_BOX_DESCRIPTION:-'N/A'}" \
     --version-description "${VAGRANT_CLOUD_BOX_VERSION_DESCRIPTION:-Automated Build}" \
-    "${VAGRANT_CLOUD_BOX}" \
-    "${VAGRANT_CLOUD_BOX_VERSION}" \
-    "${VAGRANT_PROVIDER}" \
-      package.box
+      "${VAGRANT_CLOUD_BOX}" \
+      "${VAGRANT_CLOUD_BOX_VERSION}" \
+      "${VAGRANT_PROVIDER}" \
+      "${VAGRANT_BOX}.box"
 
 log_step "Leave vagrant directory" \
   popd >/dev/null

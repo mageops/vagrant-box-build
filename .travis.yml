@@ -17,6 +17,7 @@ env:
     - VM_SWAPDISK_SIZE="2048"
   matrix:
     - VAGRANT_BOX="centos" VAGRANT_PROVIDER="virtualbox" VAGRANT_CLOUD_BOX_DESCRIPTION="Supercharged version of the official centos/7 Box ($VAGRANT_BOX_DESCRIPTION_LINKS)"
+    - VAGRANT_BOX="raccoon" VAGRANT_PROVIDER="virtualbox" VAGRANT_CLOUD_BOX_DESCRIPTION="Base Box for Raccoon - automated Magento development environment ($VAGRANT_BOX_DESCRIPTION_LINKS)"
 
 cache:
   directories:
