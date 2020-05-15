@@ -33,7 +33,9 @@ PACKAGES="\
   kernel-ml \
   kernel-ml-devel \
   cloud-utils-growpart \
-  xfsprogs
+  xfsprogs \
+  gcc \
+  make
 "
 
 # Pick a better-suited scheduler that is available in 5.6 kernel
@@ -47,9 +49,10 @@ KERNEL_CMDLINE="\
   net.ifnames=0 \
   biosdevname=0 \
   crashkernel=auto \
+  selinux=0 \
   elevator=${KERNEL_IO_SCHEDULER} \
   zswap.enabled=1 \
-  zswap.compressor=lz4 \
+  zswap.compressor=lzo \
   zswap.max_pool_percent=40 \
 "
 
@@ -79,10 +82,11 @@ FSTAB="
 # x-systemd.makefs nor x-systemd.growfs so we'll have to manually make the swapfs
 # an grow the root partition later.. This options are added anyway for the future.
 ###
+# Regarding the dvd drive see: /usr/local/bin/virtualbox-update-dvd-additions.sh
+###
 /dev/sda1 / xfs defaults,x-systemd.growfs 0 0
-/dev/sdb none swap defaults,x-systemd.makefs 0 1
-# Do not remove, see: /usr/local/bin/virtualbox-update-dvd-additions.sh
-/dev/sr0 /mnt/dvd iso9660 defaults,auto,user 0 1
+/dev/sdb none swap defaults,nofail,x-systemd.makefs 0 1
+/dev/sr0 /mnt/dvd iso9660 defaults,auto,user,ro,exec,nofail,x-systemd.device-timeout=1 0 1
 "
 
 FASTESTMIRROR="
@@ -97,7 +101,7 @@ maxthreads=15
 "
 
 VBOX_ADDITIONS_UPDATE_SCRIPT='
-#!/bin sh
+#!/bin/sh
 
 ###
 # Service - Installs VirtualBox Guest Additions from DVD
@@ -109,6 +113,8 @@ VBOX_ADDITIONS_UPDATE_SCRIPT='
 # Note: Should be started from systemd unit after DVD is mounted.
 # See: /etc/systemd/system/virtualbox-update-dvd-additions.service
 ###
+
+set -e
 
 VBOX_GUEST_ADDITIONS_DVD_MOUNTPOINT="${VBOX_GUEST_ADDITIONS_DVD_MOUNTPOINT:-/mnt/dvd}"
 VBOX_GUEST_ADDITIONS_INSTALLER_FILENAME="${VBOX_GUEST_ADDITIONS_INSTALLER_FILENAME:-VBoxLinuxAdditions.run}"
@@ -129,12 +135,13 @@ fi
 VBOX_ADDITIONS_UPDATE_SERVICE='
 [Unit]
 Description=Install VirtualBox Guest Additions from DVD
-ConditionPathExists=/mnt/dvd/VBoxLinuxAdditions.run
+ConditionPathIsMountPoint=/mnt/dvd
+ConditionFileIsExecutable=/mnt/dvd/VBoxLinuxAdditions.run
 After=mnt-dvd.mount
 
 [Service]
-Type=oneshow
-ExecStart=/usr/local/bin/virtualbox-update-dvd-additions.sh
+Type=oneshot
+ExecStart=/bin/sh /usr/local/bin/virtualbox-update-dvd-additions.sh
 RemainAfterExit=yes
 Environment=VBOX_GUEST_ADDITIONS_DVD_MOUNTPOINT=/mnt/dvd
 Environment=VBOX_GUEST_ADDITIONS_INSTALLER_FILENAME=VBoxLinuxAdditions.run
