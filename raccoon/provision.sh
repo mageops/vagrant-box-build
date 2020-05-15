@@ -1,3 +1,7 @@
+#!/usr/bin/env bash
+
+set -e -x
+
 
 yum -y install \
     python3 \
@@ -8,33 +12,38 @@ mkdir -p /opt/mageops
 
 pushd /opt/mageops
 
-git clone \
-    --branch develop \
-        https://github.com/mageops/ansible-infrastructure.git \
-        ansible
+    git clone \
+        --branch vagrant-plus \
+            https://github.com/mageops/ansible-infrastructure.git \
+            ansible
 
-virtualenv-3 virtualenv
+    virtualenv-3 virtualenv
 
-pushd ansible
+    source ./virtualenv/bin/activate
 
-mkdir -p \
-    vars/project \
-    vars/global
+        pushd ansible
 
-pip install \
-    -r requirements-python.txt
+            mkdir -p \
+                vars/project \
+                vars/global
 
-ansible-galaxy install \
-    -r requirements-galaxy.yml \
-    -p roles \
-    --force
+            pip install \
+                -r requirements-python.txt
 
-VAGRANT_ASSETS_DIR="$(pwd)/assets/vagrant"
+            ansible-galaxy install \
+                -r requirements-galaxy.yml \
+                -p roles \
+                --force
 
-mkdir -p "$VAGRANT_ASSETS_DIR/"{files,templates,tasks,certs}
+            VAGRANT_ASSETS_DIR="$(pwd)/assets/vagrant"
 
-ansible-playbook \
-    -i inventory/vagrant-nested.ini vagrant.yml \
-    -e "mageops_project_assets_dir=$PROJECT_ASSETS_DIR" \
-    -e "mageops_ansible_provisioning_mode=local_nested" \
-        vagrant.yml
+            mkdir -p "$VAGRANT_ASSETS_DIR/"{files,templates,tasks,certs}
+
+            ansible-playbook \
+                -i inventory/vagrant-nested.ini \
+                -e "mageops_project_assets_dir=$PROJECT_ASSETS_DIR" \
+                -e "mageops_ansible_provisioning_mode=local_nested" \
+                    ./vagrant.yml
+
+        popd
+popd
