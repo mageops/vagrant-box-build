@@ -150,6 +150,20 @@ Environment=VBOX_GUEST_ADDITIONS_INSTALLER_FILENAME=VBoxLinuxAdditions.run
 WantedBy=multi-user.target
 '
 
+ELREPO_ARCHIVE='
+[elrepo-kernel-archive]
+name=ELRepo.org Community Enterprise Linux Kernel Repository - el7
+baseurl=http://ftp.ines.lug.ro/elrepo/archive/kernel/el7/$basearch/
+        http://fedora.is/elrepo/archive/kernel/el7/$basearch/
+        http://fedora.is/elrepo/archive/kernel/el7/$basearch/
+        http://mirror.espoch.edu.ec/elrepo/archive/kernel/el7/$basearch/
+        http://elrepo.mirror.angkasa.id/elrepo/archive/kernel/el7/$basearch/
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-elrepo.org
+protect=0
+'
+
 install_vbox_additions_dvd_updater() {
   log_step "Install the additions updater service unit file" \
     echo "$VBOX_ADDITIONS_UPDATE_SERVICE" > /etc/systemd/system/virtualbox-update-dvd-additions.service
@@ -172,6 +186,8 @@ log_step "Install extra repositories" \
     epel-release \
     elrepo-release \
     yum-plugin-fastestmirror
+  # kernel archive is required for access to kernel-devel for older kernels
+  echo -n "${ELREPO_ARCHIVE}" > /etc/yum.repos.d/elrepo-kernel-archive.repo
 
 log_step "Install fastestmirror config" \
   echo "$FASTESTMIRROR" \
@@ -244,12 +260,3 @@ log_step "Disable selinux service" \
 
 log_step "Install VirtualBox Guest Additions Updater" \
   install_vbox_additions_dvd_updater
-
-
-
-
-
-
-
-
-

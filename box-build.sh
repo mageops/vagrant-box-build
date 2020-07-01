@@ -52,12 +52,12 @@ log_stage "Begin packaging of machine ${VM_NAME}@${VAGRANT_PROVIDER} "
 log_step "Stop the machine" \
   vagrant halt
 
-rm -vf centos.box
+rm -vf "${VAGRANT_BOX}.box"
 
 log_step "Create the box file" \
   vagrant package \
     --output "${VAGRANT_BOX}.box" \
-    --vagrantfile Vagratfile.dist \
+    --vagrantfile Vagrantfile.dist \
       "default"
 
 log_stage "Vagrant Cloud auth: $(vagrant cloud auth whoami)"
@@ -79,7 +79,3 @@ log_step "Leave vagrant directory" \
   popd >/dev/null
 
 log_stage "Machine ${VM_NAME}@${VAGRANT_PROVIDER} for box ${VAGRANT_BOX} is ready!"
-
-
-
-
