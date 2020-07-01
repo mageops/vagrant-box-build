@@ -60,20 +60,24 @@ log_step "Create the box file" \
     --vagrantfile Vagrantfile.dist \
       "default"
 
-log_stage "Vagrant Cloud auth: $(vagrant cloud auth whoami)"
+if [ -n "${ATLAS_TOKEN}" ];then
+  log_step "Vagrant cloud auth" vagrant cloud auth whoami
 
-log_stage "Publishing Box release to Vagrant cloud: ${VAGRANT_CLOUD_BOX}#${VAGRANT_CLOUD_BOX_VERSION}"
+  log_stage "Publishing Box release to Vagrant cloud: ${VAGRANT_CLOUD_BOX}#${VAGRANT_CLOUD_BOX_VERSION}"
 
-log_step "Publish and release the package" \
-  vagrant cloud publish \
-    --force \
-    --release \
-    --description "${VAGRANT_CLOUD_BOX_DESCRIPTION:-'N/A'}" \
-    --version-description "${VAGRANT_CLOUD_BOX_VERSION_DESCRIPTION:-Automated Build}" \
-      "${VAGRANT_CLOUD_BOX}" \
-      "${VAGRANT_CLOUD_BOX_VERSION}" \
-      "${VAGRANT_PROVIDER}" \
-      "${VAGRANT_BOX}.box"
+  log_step "Publish and release the package" \
+    vagrant cloud publish \
+      --force \
+      --release \
+      --description "${VAGRANT_CLOUD_BOX_DESCRIPTION:-'N/A'}" \
+      --version-description "${VAGRANT_CLOUD_BOX_VERSION_DESCRIPTION:-Automated Build}" \
+        "${VAGRANT_CLOUD_BOX}" \
+        "${VAGRANT_CLOUD_BOX_VERSION}" \
+        "${VAGRANT_PROVIDER}" \
+        "${VAGRANT_BOX}.box"
+else
+  log_step "ATLAS_TOKEN is not set skipping box publishing"
+fi
 
 log_step "Leave vagrant directory" \
   popd >/dev/null
