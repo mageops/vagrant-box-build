@@ -52,34 +52,34 @@ log_stage "Begin packaging of machine ${VM_NAME}@${VAGRANT_PROVIDER} "
 log_step "Stop the machine" \
   vagrant halt
 
-rm -vf centos.box
+rm -vf "${VAGRANT_BOX}.box"
 
 log_step "Create the box file" \
   vagrant package \
     --output "${VAGRANT_BOX}.box" \
-    --vagrantfile Vagratfile.dist \
+    --vagrantfile Vagrantfile.dist \
       "default"
 
-log_stage "Vagrant Cloud auth: $(vagrant cloud auth whoami)"
+if [ -n "${ATLAS_TOKEN:-""}" && "${TRAVIS_PULL_REQUEST:-""}" != "true" ];then
+  log_step "Vagrant cloud auth" vagrant cloud auth whoami
 
-log_stage "Publishing Box release to Vagrant cloud: ${VAGRANT_CLOUD_BOX}#${VAGRANT_CLOUD_BOX_VERSION}"
+  log_stage "Publishing Box release to Vagrant cloud: ${VAGRANT_CLOUD_BOX}#${VAGRANT_CLOUD_BOX_VERSION}"
 
-log_step "Publish and release the package" \
-  vagrant cloud publish \
-    --force \
-    --release \
-    --description "${VAGRANT_CLOUD_BOX_DESCRIPTION:-'N/A'}" \
-    --version-description "${VAGRANT_CLOUD_BOX_VERSION_DESCRIPTION:-Automated Build}" \
-      "${VAGRANT_CLOUD_BOX}" \
-      "${VAGRANT_CLOUD_BOX_VERSION}" \
-      "${VAGRANT_PROVIDER}" \
-      "${VAGRANT_BOX}.box"
+  log_step "Publish and release the package" \
+    vagrant cloud publish \
+      --force \
+      --release \
+      --description "${VAGRANT_CLOUD_BOX_DESCRIPTION:-'N/A'}" \
+      --version-description "${VAGRANT_CLOUD_BOX_VERSION_DESCRIPTION:-Automated Build}" \
+        "${VAGRANT_CLOUD_BOX}" \
+        "${VAGRANT_CLOUD_BOX_VERSION}" \
+        "${VAGRANT_PROVIDER}" \
+        "${VAGRANT_BOX}.box"
+else
+  log_step "ATLAS_TOKEN is not set or this is pull request skipping box publishing"
+fi
 
 log_step "Leave vagrant directory" \
   popd >/dev/null
 
 log_stage "Machine ${VM_NAME}@${VAGRANT_PROVIDER} for box ${VAGRANT_BOX} is ready!"
-
-
-
-
