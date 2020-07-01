@@ -60,7 +60,7 @@ log_step "Create the box file" \
     --vagrantfile Vagrantfile.dist \
       "default"
 
-if [ -n "${ATLAS_TOKEN}" ];then
+if [ -n "${ATLAS_TOKEN:-""}" && "${TRAVIS_PULL_REQUEST:-""}" != "true" ];then
   log_step "Vagrant cloud auth" vagrant cloud auth whoami
 
   log_stage "Publishing Box release to Vagrant cloud: ${VAGRANT_CLOUD_BOX}#${VAGRANT_CLOUD_BOX_VERSION}"
@@ -76,7 +76,7 @@ if [ -n "${ATLAS_TOKEN}" ];then
         "${VAGRANT_PROVIDER}" \
         "${VAGRANT_BOX}.box"
 else
-  log_step "ATLAS_TOKEN is not set skipping box publishing"
+  log_step "ATLAS_TOKEN is not set or this is pull request skipping box publishing"
 fi
 
 log_step "Leave vagrant directory" \
