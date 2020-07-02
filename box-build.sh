@@ -56,8 +56,7 @@ rm -vf "${VAGRANT_BOX}.box"
 
 log_step "Create the box file" \
   vagrant package \
-    --output "${VAGRANT_BOX}.box" \
-    --vagrantfile Vagrantfile.dist \
+    --output "${VAGRANT_BOX}.box" \    
       "default"
 
 if [ -n "${ATLAS_TOKEN:-""}" && "${TRAVIS_PULL_REQUEST:-""}" != "true" ];then
