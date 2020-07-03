@@ -40,11 +40,11 @@ pushd /opt/mageops
             mkdir -p "$VAGRANT_ASSETS_DIR/"{files,templates,tasks,certs}
 
             ansible-playbook \
-                -i inventory/vagrant-nested.ini \
+                -i inventory/raccoon.yml \
                 -e "mageops_project_assets_dir=$PROJECT_ASSETS_DIR" \
                 -e "mageops_ansible_provisioning_mode=local_nested" \
                 -e "mageops_unison_server_port=5566" \
-                    ./vagrant.yml
+                    ./raccoon.yml
 
         popd
 popd

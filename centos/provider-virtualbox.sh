@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -eu
+
 ###
 # TODO: Compile the freaking VirtualBox Guest Additions,
 # or add a service to do this at every start. I could not
@@ -32,6 +34,9 @@ vagrant_provider_setup() {
 
   log_step "Stop the VM to adjust configuration" \
     vagrant halt
+
+  log_step "Make sure old temporary files not exist" \
+    rm -f "${VM_ROOTDISK_FILENAME_ORIGINAL_VMDK}" "${VM_ROOTDISK_FILENAME_RESIZED_VDI}" "${VM_ROOTDISK_FILENAME_RESIZED_VMDK}" "${VM_SWAPDISK_FILENAME}"
 
   ####
   # > Dragons ahead! If you need to modify the following code, then

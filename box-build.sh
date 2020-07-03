@@ -24,7 +24,7 @@ log_step "Upgrade the base box" \
 
 if ! vagrant status --machine-readable 2>&1 | grep 'default,state,not_created' ; then
   log_step "Destroy the existing machine" \
-    vagrant destroy
+    vagrant destroy -f
 fi
 
 log_step "Bring up the machine" \
@@ -60,7 +60,9 @@ log_step "Create the box file" \
     --vagrantfile Vagrantfile.dist \
       "default"
 
-if [ -n "${ATLAS_TOKEN:-""}" && "${TRAVIS_PULL_REQUEST:-""}" != "true" ];then
+log_step "Add local box" vagrant box add "${VAGRANT_BOX}.box" --name "${VAGRANT_CLOUD_BOX}" --force
+
+if [ -n "${ATLAS_TOKEN:-""}" ] && [ "${TRAVIS_PULL_REQUEST:-""}" != "true" ];then
   log_step "Vagrant cloud auth" vagrant cloud auth whoami
 
   log_stage "Publishing Box release to Vagrant cloud: ${VAGRANT_CLOUD_BOX}#${VAGRANT_CLOUD_BOX_VERSION}"
