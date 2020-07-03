@@ -59,7 +59,7 @@ log_step "Create the box file" \
     --output "${VAGRANT_BOX}.box" \
       "default"
 
-if [ -n "${ATLAS_TOKEN:-""}" && "${TRAVIS_PULL_REQUEST:-""}" != "true" ];then
+if [ -n "${ATLAS_TOKEN:-""}" ] && [ "${TRAVIS_PULL_REQUEST:-""}" != "true" ];then
   log_step "Vagrant cloud auth" vagrant cloud auth whoami
 
   log_stage "Publishing Box release to Vagrant cloud: ${VAGRANT_CLOUD_BOX}#${VAGRANT_CLOUD_BOX_VERSION}"
